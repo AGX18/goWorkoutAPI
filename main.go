@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/AGX18/goWorkoutAPI/internal/app"
+	"github.com/AGX18/goWorkoutAPI/internal/routes"
 )
 
 func main() {
@@ -19,9 +20,11 @@ func main() {
 		panic(err)
 	}
 
-	http.HandleFunc("/health", HealthCheckHandler)
+	r := routes.SetupRoutes(app)
+
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%d", port),
+		Handler:      r,
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
@@ -33,8 +36,4 @@ func main() {
 		app.Logger.Fatalf("Error starting server: %v", err)
 	}
 
-}
-
-func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Status is available")
 }
