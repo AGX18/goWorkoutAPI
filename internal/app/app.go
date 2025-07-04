@@ -1,20 +1,33 @@
 package app
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/AGX18/goWorkoutAPI/internal/api"
+	"github.com/AGX18/goWorkoutAPI/internal/store"
+	"github.com/AGX18/goWorkoutAPI/migrations"
 )
 
 type Application struct {
 	Logger         *log.Logger
 	WorkoutHandler *api.WorkoutHandler
+	DB             *sql.DB
 }
 
 func NewApplication() (*Application, error) {
+	pgDB, err := store.Open()
+	if err != nil {
+		return nil, fmt.Errorf("app: open database %w", err)
+	}
+
+	if err := store.MigrateFS(pgDB, migrations.FS, "."); err != nil {
+		panic(err)
+	}
+
 	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
 	// our stores will go here
@@ -25,6 +38,7 @@ func NewApplication() (*Application, error) {
 	app := &Application{
 		Logger:         logger,
 		WorkoutHandler: workoutHandler,
+		DB:             pgDB,
 	}
 	return app, nil
 }
